@@ -96,17 +96,19 @@ func formatRichText(richTexts []notionapi.RichText) string {
 		text := rt.PlainText
 
 		// Apply annotations in order: code, bold, italic, strikethrough
-		if rt.Annotations.Code {
-			text = "`" + text + "`"
-		}
-		if rt.Annotations.Bold {
-			text = "**" + text + "**"
-		}
-		if rt.Annotations.Italic {
-			text = "*" + text + "*"
-		}
-		if rt.Annotations.Strikethrough {
-			text = "~~" + text + "~~"
+		if rt.Annotations != nil {
+			if rt.Annotations.Code {
+				text = "`" + text + "`"
+			}
+			if rt.Annotations.Bold {
+				text = "**" + text + "**"
+			}
+			if rt.Annotations.Italic {
+				text = "*" + text + "*"
+			}
+			if rt.Annotations.Strikethrough {
+				text = "~~" + text + "~~"
+			}
 		}
 
 		// Apply link
