@@ -9,7 +9,7 @@
 *.dylib
 
 # Project binary
-notion-json-to-md
+notion-to-md
 
 # Test binary, built with `go test -c`
 *.test
