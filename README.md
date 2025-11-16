@@ -84,13 +84,6 @@ Notion APIの `/blocks/{block_id}/children` エンドポイントのレスポン
 go test -v
 ```
 
-### テスト駆動開発
-
-このプロジェクトは t_wada式TDD（テスト駆動開発）で開発されています。
-- Red-Green-Refactorサイクル
-- 小さなステップでの実装
-- 16個のテストケースで機能を保証
-
 ## ライセンス
 
 MIT License
