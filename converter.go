@@ -1,119 +1,123 @@
 package main
 
-type NotionResponse struct {
-	Object  string  `json:"object"`
-	Results []Block `json:"results"`
+import (
+	"strings"
+
+	"github.com/jomei/notionapi"
+)
+
+// convert converts blocks with indentation to Markdown
+func convert(blocks []BlockWithIndent) string {
+	var result strings.Builder
+
+	for _, bwi := range blocks {
+		block := bwi.Block
+		indent := strings.Repeat("  ", bwi.Indent) // 2 spaces per indent level
+
+		switch block.GetType() {
+		case notionapi.BlockTypeHeading1:
+			if h1, ok := block.(*notionapi.Heading1Block); ok {
+				text := formatRichText(h1.Heading1.RichText)
+				result.WriteString("# " + text + "\n\n")
+			}
+
+		case notionapi.BlockTypeHeading2:
+			if h2, ok := block.(*notionapi.Heading2Block); ok {
+				text := formatRichText(h2.Heading2.RichText)
+				result.WriteString("## " + text + "\n\n")
+			}
+
+		case notionapi.BlockTypeHeading3:
+			if h3, ok := block.(*notionapi.Heading3Block); ok {
+				text := formatRichText(h3.Heading3.RichText)
+				result.WriteString("### " + text + "\n\n")
+			}
+
+		case notionapi.BlockTypeParagraph:
+			if p, ok := block.(*notionapi.ParagraphBlock); ok {
+				text := formatRichText(p.Paragraph.RichText)
+				if text != "" {
+					result.WriteString(text + "\n\n")
+				}
+			}
+
+		case notionapi.BlockTypeBulletedListItem:
+			if bl, ok := block.(*notionapi.BulletedListItemBlock); ok {
+				text := formatRichText(bl.BulletedListItem.RichText)
+				result.WriteString(indent + "- " + text + "\n")
+			}
+
+		case notionapi.BlockTypeNumberedListItem:
+			if nl, ok := block.(*notionapi.NumberedListItemBlock); ok {
+				text := formatRichText(nl.NumberedListItem.RichText)
+				result.WriteString(indent + "1. " + text + "\n")
+			}
+
+		case notionapi.BlockTypeCode:
+			if c, ok := block.(*notionapi.CodeBlock); ok {
+				text := formatRichText(c.Code.RichText)
+				lang := string(c.Code.Language)
+				result.WriteString("```" + lang + "\n")
+				result.WriteString(text + "\n")
+				result.WriteString("```\n\n")
+			}
+
+		case notionapi.BlockTypeToggle:
+			if t, ok := block.(*notionapi.ToggleBlock); ok {
+				text := formatRichText(t.Toggle.RichText)
+				result.WriteString(indent + "- " + text + "\n")
+			}
+
+		case notionapi.BlockTypeQuote:
+			if q, ok := block.(*notionapi.QuoteBlock); ok {
+				text := formatRichText(q.Quote.RichText)
+				result.WriteString("> " + text + "\n\n")
+			}
+
+		case notionapi.BlockTypeDivider:
+			result.WriteString("---\n\n")
+
+		case notionapi.BlockTypeCallout:
+			if c, ok := block.(*notionapi.CalloutBlock); ok {
+				text := formatRichText(c.Callout.RichText)
+				result.WriteString("> " + text + "\n\n")
+			}
+		}
+	}
+
+	return result.String()
 }
 
-type Block struct {
-	Type             string     `json:"type"`
-	Heading1         *Heading   `json:"heading_1,omitempty"`
-	Heading2         *Heading   `json:"heading_2,omitempty"`
-	Heading3         *Heading   `json:"heading_3,omitempty"`
-	Paragraph        *Paragraph `json:"paragraph,omitempty"`
-	BulletedListItem *ListItem  `json:"bulleted_list_item,omitempty"`
-	NumberedListItem *ListItem  `json:"numbered_list_item,omitempty"`
-	Code             *CodeBlock `json:"code,omitempty"`
-}
+// formatRichText converts Notion RichText to Markdown with annotations
+func formatRichText(richTexts []notionapi.RichText) string {
+	var result strings.Builder
 
-type Heading struct {
-	RichText []RichText `json:"rich_text"`
-}
-
-type Paragraph struct {
-	RichText []RichText `json:"rich_text"`
-}
-
-type ListItem struct {
-	RichText []RichText `json:"rich_text"`
-}
-
-type CodeBlock struct {
-	Language string     `json:"language"`
-	RichText []RichText `json:"rich_text"`
-}
-
-type RichText struct {
-	PlainText   string      `json:"plain_text"`
-	Annotations Annotations `json:"annotations"`
-	Href        *string     `json:"href"`
-}
-
-type Annotations struct {
-	Bold          bool `json:"bold"`
-	Italic        bool `json:"italic"`
-	Strikethrough bool `json:"strikethrough"`
-	Code          bool `json:"code"`
-}
-
-func formatRichText(richTexts []RichText) string {
-	var result string
 	for _, rt := range richTexts {
 		text := rt.PlainText
 
-		// Apply annotations
-		if rt.Annotations.Code {
-			text = "`" + text + "`"
-		}
-		if rt.Annotations.Bold {
-			text = "**" + text + "**"
-		}
-		if rt.Annotations.Italic {
-			text = "*" + text + "*"
-		}
-		if rt.Annotations.Strikethrough {
-			text = "~~" + text + "~~"
+		// Apply annotations in order: code, bold, italic, strikethrough
+		if rt.Annotations != nil {
+			if rt.Annotations.Code {
+				text = "`" + text + "`"
+			}
+			if rt.Annotations.Bold {
+				text = "**" + text + "**"
+			}
+			if rt.Annotations.Italic {
+				text = "*" + text + "*"
+			}
+			if rt.Annotations.Strikethrough {
+				text = "~~" + text + "~~"
+			}
 		}
 
 		// Apply link
-		if rt.Href != nil && *rt.Href != "" {
-			text = "[" + text + "](" + *rt.Href + ")"
+		if rt.Href != "" {
+			text = "[" + text + "](" + rt.Href + ")"
 		}
 
-		result += text
-	}
-	return result
-}
-
-func Convert(response NotionResponse) string {
-	if len(response.Results) == 0 {
-		return ""
+		result.WriteString(text)
 	}
 
-	var result string
-	for _, block := range response.Results {
-		switch block.Type {
-		case "heading_1":
-			if block.Heading1 != nil && len(block.Heading1.RichText) > 0 {
-				result += "# " + formatRichText(block.Heading1.RichText) + "\n\n"
-			}
-		case "heading_2":
-			if block.Heading2 != nil && len(block.Heading2.RichText) > 0 {
-				result += "## " + formatRichText(block.Heading2.RichText) + "\n\n"
-			}
-		case "heading_3":
-			if block.Heading3 != nil && len(block.Heading3.RichText) > 0 {
-				result += "### " + formatRichText(block.Heading3.RichText) + "\n\n"
-			}
-		case "paragraph":
-			if block.Paragraph != nil && len(block.Paragraph.RichText) > 0 {
-				result += formatRichText(block.Paragraph.RichText) + "\n\n"
-			}
-		case "bulleted_list_item":
-			if block.BulletedListItem != nil && len(block.BulletedListItem.RichText) > 0 {
-				result += "- " + formatRichText(block.BulletedListItem.RichText) + "\n"
-			}
-		case "numbered_list_item":
-			if block.NumberedListItem != nil && len(block.NumberedListItem.RichText) > 0 {
-				result += "1. " + formatRichText(block.NumberedListItem.RichText) + "\n"
-			}
-		case "code":
-			if block.Code != nil && len(block.Code.RichText) > 0 {
-				result += "```" + block.Code.Language + "\n"
-				result += formatRichText(block.Code.RichText) + "\n"
-				result += "```\n\n"
-			}
-		}
-	}
-	return result
+	return result.String()
 }

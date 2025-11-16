@@ -2,321 +2,449 @@ package main
 
 import (
 	"testing"
+
+	"github.com/jomei/notionapi"
 )
 
-func TestConvertEmptyResults(t *testing.T) {
-	input := NotionResponse{
-		Object:  "list",
-		Results: []Block{},
-	}
-
-	got := Convert(input)
-	want := ""
-
-	if got != want {
-		t.Errorf("Convert() = %q, want %q", got, want)
-	}
-}
-
 func TestConvertHeading1(t *testing.T) {
-	input := NotionResponse{
-		Object: "list",
-		Results: []Block{
-			{
-				Type: "heading_1",
-				Heading1: &Heading{
-					RichText: []RichText{
+	blocks := []BlockWithIndent{
+		{
+			Block: &notionapi.Heading1Block{
+				BasicBlock: notionapi.BasicBlock{
+					Object: "block",
+					Type:   notionapi.BlockTypeHeading1,
+				},
+				Heading1: notionapi.Heading{
+					RichText: []notionapi.RichText{
 						{
-							PlainText: "Test Heading 1",
+							PlainText: "Test Heading",
 						},
 					},
 				},
 			},
+			Indent: 0,
 		},
 	}
 
-	got := Convert(input)
-	want := "# Test Heading 1\n\n"
+	result := convert(blocks)
+	expected := "# Test Heading\n\n"
 
-	if got != want {
-		t.Errorf("Convert() = %q, want %q", got, want)
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
 	}
 }
 
 func TestConvertHeading2(t *testing.T) {
-	input := NotionResponse{
-		Object: "list",
-		Results: []Block{
-			{
-				Type: "heading_2",
-				Heading2: &Heading{
-					RichText: []RichText{
+	blocks := []BlockWithIndent{
+		{
+			Block: &notionapi.Heading2Block{
+				BasicBlock: notionapi.BasicBlock{
+					Object: "block",
+					Type:   notionapi.BlockTypeHeading2,
+				},
+				Heading2: notionapi.Heading{
+					RichText: []notionapi.RichText{
 						{
-							PlainText: "Test Heading 2",
+							PlainText: "Test Heading",
 						},
 					},
 				},
 			},
+			Indent: 0,
 		},
 	}
 
-	got := Convert(input)
-	want := "## Test Heading 2\n\n"
+	result := convert(blocks)
+	expected := "## Test Heading\n\n"
 
-	if got != want {
-		t.Errorf("Convert() = %q, want %q", got, want)
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
 	}
 }
 
 func TestConvertHeading3(t *testing.T) {
-	input := NotionResponse{
-		Object: "list",
-		Results: []Block{
-			{
-				Type: "heading_3",
-				Heading3: &Heading{
-					RichText: []RichText{
+	blocks := []BlockWithIndent{
+		{
+			Block: &notionapi.Heading3Block{
+				BasicBlock: notionapi.BasicBlock{
+					Object: "block",
+					Type:   notionapi.BlockTypeHeading3,
+				},
+				Heading3: notionapi.Heading{
+					RichText: []notionapi.RichText{
 						{
-							PlainText: "Test Heading 3",
+							PlainText: "Test Heading",
 						},
 					},
 				},
 			},
+			Indent: 0,
 		},
 	}
 
-	got := Convert(input)
-	want := "### Test Heading 3\n\n"
+	result := convert(blocks)
+	expected := "### Test Heading\n\n"
 
-	if got != want {
-		t.Errorf("Convert() = %q, want %q", got, want)
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
 	}
 }
 
 func TestConvertParagraph(t *testing.T) {
-	input := NotionResponse{
-		Object: "list",
-		Results: []Block{
-			{
-				Type: "paragraph",
-				Paragraph: &Paragraph{
-					RichText: []RichText{
+	blocks := []BlockWithIndent{
+		{
+			Block: &notionapi.ParagraphBlock{
+				BasicBlock: notionapi.BasicBlock{
+					Object: "block",
+					Type:   notionapi.BlockTypeParagraph,
+				},
+				Paragraph: notionapi.Paragraph{
+					RichText: []notionapi.RichText{
 						{
-							PlainText: "Test paragraph text",
+							PlainText: "Test paragraph",
 						},
 					},
 				},
 			},
+			Indent: 0,
 		},
 	}
 
-	got := Convert(input)
-	want := "Test paragraph text\n\n"
+	result := convert(blocks)
+	expected := "Test paragraph\n\n"
 
-	if got != want {
-		t.Errorf("Convert() = %q, want %q", got, want)
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
 	}
 }
 
 func TestConvertBulletedListItem(t *testing.T) {
-	input := NotionResponse{
-		Object: "list",
-		Results: []Block{
-			{
-				Type: "bulleted_list_item",
-				BulletedListItem: &ListItem{
-					RichText: []RichText{
+	blocks := []BlockWithIndent{
+		{
+			Block: &notionapi.BulletedListItemBlock{
+				BasicBlock: notionapi.BasicBlock{
+					Object: "block",
+					Type:   notionapi.BlockTypeBulletedListItem,
+				},
+				BulletedListItem: notionapi.ListItem{
+					RichText: []notionapi.RichText{
 						{
-							PlainText: "Test bullet item",
+							PlainText: "List item",
 						},
 					},
 				},
 			},
+			Indent: 0,
 		},
 	}
 
-	got := Convert(input)
-	want := "- Test bullet item\n"
+	result := convert(blocks)
+	expected := "- List item\n"
 
-	if got != want {
-		t.Errorf("Convert() = %q, want %q", got, want)
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
 	}
 }
 
 func TestConvertNumberedListItem(t *testing.T) {
-	input := NotionResponse{
-		Object: "list",
-		Results: []Block{
-			{
-				Type: "numbered_list_item",
-				NumberedListItem: &ListItem{
-					RichText: []RichText{
+	blocks := []BlockWithIndent{
+		{
+			Block: &notionapi.NumberedListItemBlock{
+				BasicBlock: notionapi.BasicBlock{
+					Object: "block",
+					Type:   notionapi.BlockTypeNumberedListItem,
+				},
+				NumberedListItem: notionapi.ListItem{
+					RichText: []notionapi.RichText{
 						{
-							PlainText: "Test numbered item",
+							PlainText: "Numbered item",
 						},
 					},
 				},
 			},
+			Indent: 0,
 		},
 	}
 
-	got := Convert(input)
-	want := "1. Test numbered item\n"
+	result := convert(blocks)
+	expected := "1. Numbered item\n"
 
-	if got != want {
-		t.Errorf("Convert() = %q, want %q", got, want)
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
 	}
 }
 
-func TestConvertCodeBlock(t *testing.T) {
-	input := NotionResponse{
-		Object: "list",
-		Results: []Block{
-			{
-				Type: "code",
-				Code: &CodeBlock{
-					Language: "go",
-					RichText: []RichText{
+func TestConvertCode(t *testing.T) {
+	blocks := []BlockWithIndent{
+		{
+			Block: &notionapi.CodeBlock{
+				BasicBlock: notionapi.BasicBlock{
+					Object: "block",
+					Type:   notionapi.BlockTypeCode,
+				},
+				Code: notionapi.Code{
+					RichText: []notionapi.RichText{
 						{
 							PlainText: "func main() {}",
 						},
 					},
+					Language: "go",
 				},
 			},
+			Indent: 0,
 		},
 	}
 
-	got := Convert(input)
-	want := "```go\nfunc main() {}\n```\n\n"
+	result := convert(blocks)
+	expected := "```go\nfunc main() {}\n```\n\n"
 
-	if got != want {
-		t.Errorf("Convert() = %q, want %q", got, want)
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
+
+func TestConvertToggle(t *testing.T) {
+	blocks := []BlockWithIndent{
+		{
+			Block: &notionapi.ToggleBlock{
+				BasicBlock: notionapi.BasicBlock{
+					Object: "block",
+					Type:   notionapi.BlockTypeToggle,
+				},
+				Toggle: notionapi.Toggle{
+					RichText: []notionapi.RichText{
+						{
+							PlainText: "Toggle item",
+						},
+					},
+				},
+			},
+			Indent: 0,
+		},
+	}
+
+	result := convert(blocks)
+	expected := "- Toggle item\n"
+
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
+
+func TestConvertQuote(t *testing.T) {
+	blocks := []BlockWithIndent{
+		{
+			Block: &notionapi.QuoteBlock{
+				BasicBlock: notionapi.BasicBlock{
+					Object: "block",
+					Type:   notionapi.BlockTypeQuote,
+				},
+				Quote: notionapi.Quote{
+					RichText: []notionapi.RichText{
+						{
+							PlainText: "Quote text",
+						},
+					},
+				},
+			},
+			Indent: 0,
+		},
+	}
+
+	result := convert(blocks)
+	expected := "> Quote text\n\n"
+
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
+
+func TestConvertCallout(t *testing.T) {
+	blocks := []BlockWithIndent{
+		{
+			Block: &notionapi.CalloutBlock{
+				BasicBlock: notionapi.BasicBlock{
+					Object: "block",
+					Type:   notionapi.BlockTypeCallout,
+				},
+				Callout: notionapi.Callout{
+					RichText: []notionapi.RichText{
+						{
+							PlainText: "Callout text",
+						},
+					},
+				},
+			},
+			Indent: 0,
+		},
+	}
+
+	result := convert(blocks)
+	expected := "> Callout text\n\n"
+
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
+
+func TestConvertDivider(t *testing.T) {
+	blocks := []BlockWithIndent{
+		{
+			Block: &notionapi.DividerBlock{
+				BasicBlock: notionapi.BasicBlock{
+					Object: "block",
+					Type:   notionapi.BlockTypeDivider,
+				},
+			},
+			Indent: 0,
+		},
+	}
+
+	result := convert(blocks)
+	expected := "---\n\n"
+
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
 	}
 }
 
 func TestConvertBoldAnnotation(t *testing.T) {
-	input := NotionResponse{
-		Object: "list",
-		Results: []Block{
-			{
-				Type: "paragraph",
-				Paragraph: &Paragraph{
-					RichText: []RichText{
+	blocks := []BlockWithIndent{
+		{
+			Block: &notionapi.ParagraphBlock{
+				BasicBlock: notionapi.BasicBlock{
+					Object: "block",
+					Type:   notionapi.BlockTypeParagraph,
+				},
+				Paragraph: notionapi.Paragraph{
+					RichText: []notionapi.RichText{
 						{
 							PlainText: "bold text",
-							Annotations: Annotations{
+							Annotations: &notionapi.Annotations{
 								Bold: true,
 							},
 						},
 					},
 				},
 			},
+			Indent: 0,
 		},
 	}
 
-	got := Convert(input)
-	want := "**bold text**\n\n"
+	result := convert(blocks)
+	expected := "**bold text**\n\n"
 
-	if got != want {
-		t.Errorf("Convert() = %q, want %q", got, want)
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
 	}
 }
 
 func TestConvertItalicAnnotation(t *testing.T) {
-	input := NotionResponse{
-		Object: "list",
-		Results: []Block{
-			{
-				Type: "paragraph",
-				Paragraph: &Paragraph{
-					RichText: []RichText{
+	blocks := []BlockWithIndent{
+		{
+			Block: &notionapi.ParagraphBlock{
+				BasicBlock: notionapi.BasicBlock{
+					Object: "block",
+					Type:   notionapi.BlockTypeParagraph,
+				},
+				Paragraph: notionapi.Paragraph{
+					RichText: []notionapi.RichText{
 						{
 							PlainText: "italic text",
-							Annotations: Annotations{
+							Annotations: &notionapi.Annotations{
 								Italic: true,
 							},
 						},
 					},
 				},
 			},
+			Indent: 0,
 		},
 	}
 
-	got := Convert(input)
-	want := "*italic text*\n\n"
+	result := convert(blocks)
+	expected := "*italic text*\n\n"
 
-	if got != want {
-		t.Errorf("Convert() = %q, want %q", got, want)
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
 	}
 }
 
 func TestConvertCodeAnnotation(t *testing.T) {
-	input := NotionResponse{
-		Object: "list",
-		Results: []Block{
-			{
-				Type: "paragraph",
-				Paragraph: &Paragraph{
-					RichText: []RichText{
+	blocks := []BlockWithIndent{
+		{
+			Block: &notionapi.ParagraphBlock{
+				BasicBlock: notionapi.BasicBlock{
+					Object: "block",
+					Type:   notionapi.BlockTypeParagraph,
+				},
+				Paragraph: notionapi.Paragraph{
+					RichText: []notionapi.RichText{
 						{
 							PlainText: "code text",
-							Annotations: Annotations{
+							Annotations: &notionapi.Annotations{
 								Code: true,
 							},
 						},
 					},
 				},
 			},
+			Indent: 0,
 		},
 	}
 
-	got := Convert(input)
-	want := "`code text`\n\n"
+	result := convert(blocks)
+	expected := "`code text`\n\n"
 
-	if got != want {
-		t.Errorf("Convert() = %q, want %q", got, want)
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
 	}
 }
 
 func TestConvertStrikethroughAnnotation(t *testing.T) {
-	input := NotionResponse{
-		Object: "list",
-		Results: []Block{
-			{
-				Type: "paragraph",
-				Paragraph: &Paragraph{
-					RichText: []RichText{
+	blocks := []BlockWithIndent{
+		{
+			Block: &notionapi.ParagraphBlock{
+				BasicBlock: notionapi.BasicBlock{
+					Object: "block",
+					Type:   notionapi.BlockTypeParagraph,
+				},
+				Paragraph: notionapi.Paragraph{
+					RichText: []notionapi.RichText{
 						{
-							PlainText: "strike text",
-							Annotations: Annotations{
+							PlainText: "strikethrough text",
+							Annotations: &notionapi.Annotations{
 								Strikethrough: true,
 							},
 						},
 					},
 				},
 			},
+			Indent: 0,
 		},
 	}
 
-	got := Convert(input)
-	want := "~~strike text~~\n\n"
+	result := convert(blocks)
+	expected := "~~strikethrough text~~\n\n"
 
-	if got != want {
-		t.Errorf("Convert() = %q, want %q", got, want)
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
 	}
 }
 
 func TestConvertMultipleAnnotations(t *testing.T) {
-	input := NotionResponse{
-		Object: "list",
-		Results: []Block{
-			{
-				Type: "paragraph",
-				Paragraph: &Paragraph{
-					RichText: []RichText{
+	blocks := []BlockWithIndent{
+		{
+			Block: &notionapi.ParagraphBlock{
+				BasicBlock: notionapi.BasicBlock{
+					Object: "block",
+					Type:   notionapi.BlockTypeParagraph,
+				},
+				Paragraph: notionapi.Paragraph{
+					RichText: []notionapi.RichText{
 						{
-							PlainText: "bold italic text",
-							Annotations: Annotations{
+							PlainText: "bold italic",
+							Annotations: &notionapi.Annotations{
 								Bold:   true,
 								Italic: true,
 							},
@@ -324,58 +452,175 @@ func TestConvertMultipleAnnotations(t *testing.T) {
 					},
 				},
 			},
+			Indent: 0,
 		},
 	}
 
-	got := Convert(input)
-	want := "***bold italic text***\n\n"
+	result := convert(blocks)
+	expected := "***bold italic***\n\n"
 
-	if got != want {
-		t.Errorf("Convert() = %q, want %q", got, want)
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
 	}
 }
 
 func TestConvertLink(t *testing.T) {
-	href := "https://example.com"
-	input := NotionResponse{
-		Object: "list",
-		Results: []Block{
-			{
-				Type: "paragraph",
-				Paragraph: &Paragraph{
-					RichText: []RichText{
+	blocks := []BlockWithIndent{
+		{
+			Block: &notionapi.ParagraphBlock{
+				BasicBlock: notionapi.BasicBlock{
+					Object: "block",
+					Type:   notionapi.BlockTypeParagraph,
+				},
+				Paragraph: notionapi.Paragraph{
+					RichText: []notionapi.RichText{
 						{
 							PlainText: "link text",
-							Href:      &href,
+							Href:      "https://example.com",
 						},
 					},
 				},
 			},
+			Indent: 0,
 		},
 	}
 
-	got := Convert(input)
-	want := "[link text](https://example.com)\n\n"
+	result := convert(blocks)
+	expected := "[link text](https://example.com)\n\n"
 
-	if got != want {
-		t.Errorf("Convert() = %q, want %q", got, want)
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
+
+func TestConvertNestedList(t *testing.T) {
+	blocks := []BlockWithIndent{
+		{
+			Block: &notionapi.BulletedListItemBlock{
+				BasicBlock: notionapi.BasicBlock{
+					Object: "block",
+					Type:   notionapi.BlockTypeBulletedListItem,
+				},
+				BulletedListItem: notionapi.ListItem{
+					RichText: []notionapi.RichText{
+						{
+							PlainText: "Parent item",
+						},
+					},
+				},
+			},
+			Indent: 0,
+		},
+		{
+			Block: &notionapi.BulletedListItemBlock{
+				BasicBlock: notionapi.BasicBlock{
+					Object: "block",
+					Type:   notionapi.BlockTypeBulletedListItem,
+				},
+				BulletedListItem: notionapi.ListItem{
+					RichText: []notionapi.RichText{
+						{
+							PlainText: "Child item",
+						},
+					},
+				},
+			},
+			Indent: 1,
+		},
+	}
+
+	result := convert(blocks)
+	expected := "- Parent item\n  - Child item\n"
+
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
+
+func TestConvertMultipleBlocks(t *testing.T) {
+	blocks := []BlockWithIndent{
+		{
+			Block: &notionapi.Heading1Block{
+				BasicBlock: notionapi.BasicBlock{
+					Object: "block",
+					Type:   notionapi.BlockTypeHeading1,
+				},
+				Heading1: notionapi.Heading{
+					RichText: []notionapi.RichText{
+						{
+							PlainText: "Title",
+						},
+					},
+				},
+			},
+			Indent: 0,
+		},
+		{
+			Block: &notionapi.ParagraphBlock{
+				BasicBlock: notionapi.BasicBlock{
+					Object: "block",
+					Type:   notionapi.BlockTypeParagraph,
+				},
+				Paragraph: notionapi.Paragraph{
+					RichText: []notionapi.RichText{
+						{
+							PlainText: "Content",
+						},
+					},
+				},
+			},
+			Indent: 0,
+		},
+	}
+
+	result := convert(blocks)
+	expected := "# Title\n\nContent\n\n"
+
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
+
+func TestConvertEmptyParagraph(t *testing.T) {
+	blocks := []BlockWithIndent{
+		{
+			Block: &notionapi.ParagraphBlock{
+				BasicBlock: notionapi.BasicBlock{
+					Object: "block",
+					Type:   notionapi.BlockTypeParagraph,
+				},
+				Paragraph: notionapi.Paragraph{
+					RichText: []notionapi.RichText{},
+				},
+			},
+			Indent: 0,
+		},
+	}
+
+	result := convert(blocks)
+	expected := ""
+
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
 	}
 }
 
 func TestConvertMultipleRichTexts(t *testing.T) {
-	input := NotionResponse{
-		Object: "list",
-		Results: []Block{
-			{
-				Type: "paragraph",
-				Paragraph: &Paragraph{
-					RichText: []RichText{
+	blocks := []BlockWithIndent{
+		{
+			Block: &notionapi.ParagraphBlock{
+				BasicBlock: notionapi.BasicBlock{
+					Object: "block",
+					Type:   notionapi.BlockTypeParagraph,
+				},
+				Paragraph: notionapi.Paragraph{
+					RichText: []notionapi.RichText{
 						{
 							PlainText: "Normal ",
 						},
 						{
 							PlainText: "bold",
-							Annotations: Annotations{
+							Annotations: &notionapi.Annotations{
 								Bold: true,
 							},
 						},
@@ -385,68 +630,14 @@ func TestConvertMultipleRichTexts(t *testing.T) {
 					},
 				},
 			},
+			Indent: 0,
 		},
 	}
 
-	got := Convert(input)
-	want := "Normal **bold** text\n\n"
+	result := convert(blocks)
+	expected := "Normal **bold** text\n\n"
 
-	if got != want {
-		t.Errorf("Convert() = %q, want %q", got, want)
-	}
-}
-
-func TestConvertMultipleBlocks(t *testing.T) {
-	input := NotionResponse{
-		Object: "list",
-		Results: []Block{
-			{
-				Type: "heading_1",
-				Heading1: &Heading{
-					RichText: []RichText{
-						{
-							PlainText: "Title",
-						},
-					},
-				},
-			},
-			{
-				Type: "paragraph",
-				Paragraph: &Paragraph{
-					RichText: []RichText{
-						{
-							PlainText: "First paragraph",
-						},
-					},
-				},
-			},
-			{
-				Type: "bulleted_list_item",
-				BulletedListItem: &ListItem{
-					RichText: []RichText{
-						{
-							PlainText: "Item 1",
-						},
-					},
-				},
-			},
-			{
-				Type: "bulleted_list_item",
-				BulletedListItem: &ListItem{
-					RichText: []RichText{
-						{
-							PlainText: "Item 2",
-						},
-					},
-				},
-			},
-		},
-	}
-
-	got := Convert(input)
-	want := "# Title\n\nFirst paragraph\n\n- Item 1\n- Item 2\n"
-
-	if got != want {
-		t.Errorf("Convert() = %q, want %q", got, want)
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
 	}
 }
