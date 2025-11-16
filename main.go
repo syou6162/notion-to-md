@@ -36,15 +36,26 @@ func main() {
 	// Initialize Notion client
 	client := notionapi.NewClient(notionapi.Token(token))
 
-	// Fetch all blocks recursively
 	ctx := context.Background()
+
+	// Fetch page information
+	pageInfo, err := fetchPageInfo(ctx, client, notionapi.PageID(blockID))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error fetching page info: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Fetch all blocks recursively
 	blocks, err := fetchAllBlocks(ctx, client.Block, blockID)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error fetching blocks: %v\n", err)
 		os.Exit(1)
 	}
 
-	// Convert to Markdown
+	// Generate front-matter and convert to Markdown
+	frontMatter := generateFrontMatter(pageInfo)
 	markdown := convert(blocks)
+
+	fmt.Print(frontMatter)
 	fmt.Print(markdown)
 }

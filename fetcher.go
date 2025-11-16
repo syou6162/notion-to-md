@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/jomei/notionapi"
 )
@@ -87,4 +88,32 @@ func fetchBlockChildren(ctx context.Context, fetcher BlockFetcher, blockID notio
 	}
 
 	return allBlocks, nil
+}
+
+// fetchPageInfo fetches page metadata from Notion API
+func fetchPageInfo(ctx context.Context, client *notionapi.Client, pageID notionapi.PageID) (PageInfo, error) {
+	page, err := client.Page.Get(ctx, pageID)
+	if err != nil {
+		return PageInfo{}, fmt.Errorf("failed to get page info: %w", err)
+	}
+
+	// Extract title from properties
+	var title string
+	for _, prop := range page.Properties {
+		if titleProp, ok := prop.(*notionapi.TitleProperty); ok {
+			var titleBuilder strings.Builder
+			for _, rt := range titleProp.Title {
+				titleBuilder.WriteString(rt.PlainText)
+			}
+			title = titleBuilder.String()
+			break
+		}
+	}
+
+	return PageInfo{
+		Title:          title,
+		URL:            page.URL,
+		CreatedTime:    page.CreatedTime,
+		LastEditedTime: page.LastEditedTime,
+	}, nil
 }

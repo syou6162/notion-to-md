@@ -2,9 +2,32 @@ package main
 
 import (
 	"strings"
+	"time"
 
 	"github.com/jomei/notionapi"
 )
+
+// PageInfo holds metadata about a Notion page
+type PageInfo struct {
+	Title          string
+	URL            string
+	CreatedTime    time.Time
+	LastEditedTime time.Time
+}
+
+// generateFrontMatter generates YAML front-matter from page metadata
+func generateFrontMatter(info PageInfo) string {
+	var result strings.Builder
+
+	result.WriteString("---\n")
+	result.WriteString("title: \"" + info.Title + "\"\n")
+	result.WriteString("url: " + info.URL + "\n")
+	result.WriteString("created: " + info.CreatedTime.Format(time.RFC3339) + "\n")
+	result.WriteString("updated: " + info.LastEditedTime.Format(time.RFC3339) + "\n")
+	result.WriteString("---\n\n")
+
+	return result.String()
+}
 
 // convert converts blocks with indentation to Markdown
 func convert(blocks []BlockWithIndent) string {

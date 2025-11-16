@@ -36,6 +36,18 @@ type BlockWithIndent struct {
 }
 ```
 
+#### PageInfo
+ページメタデータを保持する構造体
+
+```go
+type PageInfo struct {
+    Title          string
+    URL            string
+    CreatedTime    time.Time
+    LastEditedTime time.Time
+}
+```
+
 ### 主要な関数
 
 #### `main()`
@@ -44,14 +56,30 @@ CLIエントリーポイント。
 2. `extractBlockID`でBlock IDを抽出
 3. 環境変数`NOTION_TOKEN`からトークンを取得
 4. Notion APIクライアント初期化
-5. `fetchAllBlocks`でブロック取得
-6. `convert`でMarkdown変換
-7. 標準出力に出力
+5. `fetchPageInfo`でページメタデータを取得
+6. `fetchAllBlocks`でブロック取得
+7. `generateFrontMatter`でfront-matter生成
+8. `convert`でMarkdown変換
+9. front-matterとMarkdown本文を結合して標準出力に出力
 
 #### `extractBlockID(input string) (notionapi.BlockID, error)`
 Notion URLまたはBlock ID文字列からBlock IDを抽出する。
 - URL形式: `https://www.notion.so/workspace/Title-{32-hex}`から32桁の16進数を抽出し、UUID形式（ハイフン付き）に変換
 - ID形式: そのまま返す
+
+#### `fetchPageInfo(ctx, client, pageID) (PageInfo, error)`
+ページIDを受け取り、Notion APIからページメタデータを取得する。
+- Notion Page APIを使用してページ情報を取得
+- Propertiesからタイトルを抽出（TitlePropertyを検索）
+- URL、作成日時、最終更新日時を取得
+- PageInfo構造体として返却
+
+#### `generateFrontMatter(info PageInfo) string`
+PageInfoを受け取り、YAML形式のfront-matterを生成する。
+- タイトル、URL、作成日時、最終更新日時を含む
+- 日時はRFC3339形式で出力
+- `---`で囲まれたYAML形式
+- 末尾に空行を追加
 
 #### `fetchAllBlocks(ctx, client, blockID) ([]BlockWithIndent, error)`
 ブロックIDを受け取り、そのブロックの子要素を再帰的に取得する。
@@ -157,10 +185,11 @@ notion-to-md <block-id> > output.md
 
 ### テストファイル構成
 
-- **converter_test.go**: 変換ロジックのテスト（21テストケース）
+- **converter_test.go**: 変換ロジックのテスト（23テストケース）
   - ブロックタイプ別変換（heading, paragraph, list, code, toggle, quote, callout, divider）
   - アノテーション処理（bold, italic, code, strikethrough, 複数アノテーション）
   - リンク、ネストリスト、複数ブロック、空段落、複数RichText要素
+  - front-matter生成（通常ケース、空タイトルケース）
 - **parser_test.go**: URL/Block ID解析のテスト（6テストケース）
   - Notion URL解析（https/http）
   - Block ID直接指定（ハイフン有無）

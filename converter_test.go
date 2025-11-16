@@ -2,6 +2,7 @@ package main
 
 import (
 	"testing"
+	"time"
 
 	"github.com/jomei/notionapi"
 )
@@ -636,6 +637,54 @@ func TestConvertMultipleRichTexts(t *testing.T) {
 
 	result := convert(blocks)
 	expected := "Normal **bold** text\n\n"
+
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
+
+func TestGenerateFrontMatter(t *testing.T) {
+	createdTime := time.Date(2024, 1, 1, 12, 0, 0, 0, time.UTC)
+	updatedTime := time.Date(2024, 1, 2, 15, 30, 0, 0, time.UTC)
+
+	pageInfo := PageInfo{
+		Title:          "Test Page Title",
+		URL:            "https://www.notion.so/test-page",
+		CreatedTime:    createdTime,
+		LastEditedTime: updatedTime,
+	}
+
+	result := generateFrontMatter(pageInfo)
+	expected := "---\n" +
+		"title: \"Test Page Title\"\n" +
+		"url: https://www.notion.so/test-page\n" +
+		"created: 2024-01-01T12:00:00Z\n" +
+		"updated: 2024-01-02T15:30:00Z\n" +
+		"---\n\n"
+
+	if result != expected {
+		t.Errorf("Expected %q, got %q", expected, result)
+	}
+}
+
+func TestGenerateFrontMatterWithEmptyTitle(t *testing.T) {
+	createdTime := time.Date(2024, 1, 1, 12, 0, 0, 0, time.UTC)
+	updatedTime := time.Date(2024, 1, 2, 15, 30, 0, 0, time.UTC)
+
+	pageInfo := PageInfo{
+		Title:          "",
+		URL:            "https://www.notion.so/untitled",
+		CreatedTime:    createdTime,
+		LastEditedTime: updatedTime,
+	}
+
+	result := generateFrontMatter(pageInfo)
+	expected := "---\n" +
+		"title: \"\"\n" +
+		"url: https://www.notion.so/untitled\n" +
+		"created: 2024-01-01T12:00:00Z\n" +
+		"updated: 2024-01-02T15:30:00Z\n" +
+		"---\n\n"
 
 	if result != expected {
 		t.Errorf("Expected %q, got %q", expected, result)
