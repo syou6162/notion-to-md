@@ -9,6 +9,7 @@ Notion APIを使ってページのブロックを再帰的に取得し、ネス�
 ## 特徴
 
 - ✅ Notion URLまたはBlock IDから直接変換
+- ✅ YAML front-matterでページメタデータを出力
 - ✅ ネストされたリストに対応（最大10階層）
 - ✅ ページネーション対応（100件以上のブロック）
 - ✅ 豊富なブロックタイプサポート
@@ -50,6 +51,30 @@ notion-to-md <block-id>
 # ファイルに保存
 notion-to-md <block-id> > output.md
 ```
+
+## 出力形式
+
+変換されたMarkdownには、YAML front-matterとしてページメタデータが含まれます:
+
+```markdown
+---
+title: "ページタイトル"
+url: https://www.notion.so/workspace/page-id
+created: 2024-01-01T12:00:00Z
+updated: 2024-01-02T15:30:00Z
+---
+
+# 見出し
+
+本文の内容...
+```
+
+### front-matterに含まれる情報
+
+- `title`: ページのタイトル
+- `url`: NotionページのURL
+- `created`: ページの作成日時（RFC3339形式）
+- `updated`: ページの最終更新日時（RFC3339形式）
 
 ## サポートしているブロックタイプ
 
