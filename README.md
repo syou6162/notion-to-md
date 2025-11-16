@@ -35,7 +35,7 @@ go build
 Notion Integration Tokenを設定します:
 
 ```bash
-export NOTION_TOKEN="secret_xxxxxxxxxxxxx"
+export NOTION_TOKEN="ntn_xxxxxxxxxxxxx"
 ```
 
 ### 実行
