@@ -38,7 +38,7 @@ func main() {
 
 	// Fetch all blocks recursively
 	ctx := context.Background()
-	blocks, err := fetchAllBlocks(ctx, client, blockID)
+	blocks, err := fetchAllBlocks(ctx, client.Block, blockID)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error fetching blocks: %v\n", err)
 		os.Exit(1)
